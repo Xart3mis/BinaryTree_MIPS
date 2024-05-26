@@ -1,75 +1,310 @@
 .data
-A: .word 4, 9, 10, 10, 15, 2, 3
+A1: .word 4, 9, 10, 10, 15, 2, 3
+A2: .word 4, 9, 10, 15, 10, 2, 3
 O: .word 0, 0, 0, 0, 0, 0, 0
 
 .text
-  # $a0 contains address of array containing representation 1 of the binary tree
-  # $a1 contains size of array of representation 1
-  # $a2 contains address of output array
+  la $a0, A1 # arr
+  li $a1, 7 # arr.len()
+  la $a2, O # output
+  li $a3, 0 # idx
+  li $s0, 0 # position/i
 
-  la $a0, A
-  li $a1, 7
-  la $a2, O
+  jal proc1
+  
+  la $a0, O
+  jal print_arr
+  
+  la $a0, A2 # arr
+  li $a1, 7 # arr.len()
+  la $a2, O # output
+  li $a3, 0 # idx
+  li $s0, 0 # position/i
+  
+  jal proc2
+  
+  la $a0, O
+  jal print_arr
+  
+  li $t0, 0
+  li $t1, 1
+  la $a0, A1
+  li $a1, 9
+  li $a2, 7
+  jal proc3
+  
+  move $a0, $v0
+ 	li $v0, 1
+ 	syscall
+ 	
+	li $v0, 11
+ 	li $a0, '\n'
+ 	syscall
+  
+  la $a0, A2
+  li $a1, 9
+  li $a2, 7
+  li $a3, 0
+  jal proc4
+  
+  move $a0, $v0
+ 	li $v0, 1
+ 	syscall
+ 	
+ 	li $v0, 11
+ 	li $a0, '\n'
+ 	syscall
+  
+  li $v0, 10
+  syscall
 
-  li $t0, 0 # initialize $t0 with 0. (output index/count)
-  li $t2, 0 # initialize $t2 with 0. (input index)
+proc1:
+  addi $sp, $sp, -20
+  sw $ra, 0($sp)
+  sw $a0, 4($sp)
+  sw $a1, 8($sp)
+  sw $a2, 12($sp)
+  sw $a3, 16($sp)
+
+	bge $a3, $a1, exit1
+
+  sll $t0, $a3, 2
+  add $t1, $a0, $t0
+  lw $t0, 0($t1)
+
+  sll $t1, $s0, 2
+  add $t2, $a2, $t1
+  sw $t0, 0($t2)
+  	addi $s0, $s0, 1
+  
+
+  lw $a3, 16($sp)
+  sll $a3, $a3, 1
+  addi $a3, $a3, 1
 
   jal proc1
 
+  lw $a3, 16($sp)
+  sll $a3, $a3, 1
+  addi $a3, $a3, 2
+  
+  jal proc1
+  
+exit1:
+  lw $ra, 0($sp)
+  lw $a0, 4($sp)
+  lw $a1, 8($sp)
+  lw $a2, 12($sp)
+  lw $a3, 16($sp)
 
-proc1:
-  addi $sp, $sp, -12
-
-  sw $a0, 0($sp)
-  sw $a1, 4($sp)
-  sw $a2, 8($sp)
-
-
-  beq $a1, $zero, exit
-
-exit:
-  sll $t1, $t0, 2
-  add $sp, $sp, $t1
-
-  lw $a2, 8($sp)
-  lw $a1, 4($sp)
-  lw $a0, 0($sp)
+  addi $sp, $sp, 20
 
   jr $ra
 
-l1:
-  slt $t3, $t0, $a1
-  beq $t3, $zero, exit
+proc2:
+  addi $sp, $sp, -20
+  sw $ra, 0($sp)
+  sw $a0, 4($sp)
+  sw $a1, 8($sp)
+  sw $a2, 12($sp)
+  sw $a3, 16($sp)
 
-  sll $t7, $t2, 2
-  add $a2, $a2, $t7
-  lw $t7, 0($a2)
+	bge $a3, $a1, exit2
+
+	sll $t0, $s0, 2
+	add $t1, $a0, $t0
+	lw $t0, 0($t1)
+	
+	sll $t1, $a3, 2
+	add $t2, $a2, $t1
+	sw $t0, 0($t2)
+	addi $s0, $s0, 1
+
+  lw $a3, 16($sp)
+  sll $a3, $a3, 1
+  addi $a3, $a3, 1
+
+  jal proc2
+
+  lw $a3, 16($sp)
+  sll $a3, $a3, 1
+  addi $a3, $a3, 2
+  
+  jal proc2
+  
+exit2:
+  lw $ra, 0($sp)
+  lw $a0, 4($sp)
+  lw $a1, 8($sp)
+  lw $a2, 12($sp)
+  lw $a3, 16($sp)
+
+  addi $sp, $sp, 20
+
+  jr $ra
+
+proc3:
+  addi $sp, $sp, -16
+  sw $ra, 0($sp)
+  sw $a0, 4($sp)
+  sw $a1, 8($sp) 
+  sw $a2, 12($sp)
+
+  slt $t2, $t0, $a2
+  beq $t2, $zero, exit3
 
   sll $t3, $t0, 2
-  add $a2, $a2, $t3
-  sw $t7, 0($a0)
+  add $t6, $a0, $t3
 
-  sll $t1, $t2, 1
+  lw $t3, 0($t6)
 
-  addi $t5, $t1, 2 # right idx
-  addi $t6, $t1, 1 # left idx
+  beq $t3, $a1, rlevel
 
-  blt $t5, $a1, pri
-  blt $t6, $a1, pli
+  sll $t3, $t0, 1
+  addi $t4, $t3, 1 # left idx
+  addi $t5, $t3, 2 # right idx
 
-  addi $t0, $t0, 1
+  addi $t1, $t1, 1
+  move $t0, $t4
+  
+  jal proc3
 
-  lw $t5, 0($sp)
-  addi $sp, $sp, 4
+  bgt $v0, $zero, exit3
 
-  move $t2, $t5
+  move $t0, $t5
+  jal proc3
 
-  bne $t3, $zero, l1
+  bgt $v0, $zero, exit3
 
-pri:
-  addi $sp, $sp, -4
-  sw $t5, 0($sp)
+  li $v0, -1
 
-pli:
-  addi $sp, $sp, -4
-  sw $t6, 0($sp)
+  j exit3
+
+exit3:
+  lw $a2, 12($sp)
+  lw $a1, 8($sp)
+  lw $a0, 4($sp)
+  lw $ra, 0($sp)
+
+  addi $sp, $sp, 16
+
+  jr $ra
+
+rn1:
+  li $v0, -1
+  j exit3
+
+r1:
+  li $v0, 1
+  j exit3
+
+rlevel:
+  beqz $t0, r1
+
+  move $v0, $t1
+  j exit3
+
+proc4:
+  addi $sp, $sp, -20
+  sw $ra, 0($sp)
+  sw $a0, 4($sp)
+  sw $a1, 8($sp)
+  sw $a2, 12($sp)
+  sw $a3, 16($sp)
+  
+  slt $t1, $a2, $a3
+  bne $t1, $zero, rn12
+  
+  sll $t1, $a3, 2
+  add $t0, $a0, $t1
+  
+  lw $t1, 0($t0)
+  beq $t1, $a1, rnlevel4
+  
+	lw $a3, 16($sp)
+  sll $s1, $a3, 1
+  li $s2, -1
+  addi $t2, $s1, 1
+  move $a3, $t2 
+  
+  jal proc4
+  bne $v0, $s2, exit4
+
+	lw $a3, 16($sp)
+  sll $s1, $a3, 1
+  li $s2, -1
+  addi $t2, $s1, 2
+  move $a3, $t2 
+  
+  jal proc4
+	
+  bne $t1, $zero, exit4
+  
+  #li $v0, -1
+  j exit4
+
+exit4:
+  lw $ra, 0($sp)
+  lw $a0, 4($sp)
+  lw $a1, 8($sp)
+  lw $a2, 12($sp)
+  lw $a3, 16($sp)
+  
+  addi $sp, $sp, 20
+  
+  jr $ra
+
+loop:
+  srl $t1, $t1, 1
+  addi $v0, $v0, 1
+
+  ble $t1, $t0, exit4
+	j loop
+
+rnlevel4:
+  li $v0, 1
+  addi $t1, $a3, 1
+  li $t0, 1
+  
+  ble $t1, $t0, exit4
+	j loop
+
+rn12:
+  li $v0, -1
+  j exit4
+
+#a0 -> array address
+#a1 -> array size
+print_arr:
+	move $t0, $a0
+	addi $t2, $a1, -1
+	
+	li $t1, 0
+	
+print_loop:
+	bge $t1, $a1, exit_print
+  
+	lw $a0, 0($t0)
+    
+	li $v0, 1
+	syscall
+    
+	bge $t1, $t2, skip_sep
+    
+  li $v0, 11
+  li $a0, ','
+  syscall
+  li $a0, ' '
+  syscall
+    
+  skip_sep:  
+  addi $t1, $t1, 1
+  addi $t0, $t0, 4
+  j print_loop
+ 
+ exit_print:
+ 	li $v0, 11
+ 	li $a0, '\n'
+ 	syscall
+ 
+  jr $ra
