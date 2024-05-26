@@ -26,11 +26,10 @@ O: .word 0, 0, 0, 0, 0, 0, 0
   la $a0, O
   jal print_arr
   
-  li $t0, 0
-  li $t1, 1
   la $a0, A1
   li $a1, 9
   li $a2, 7
+  li $a3, 0
   jal proc3
   
   move $a0, $v0
@@ -45,6 +44,7 @@ O: .word 0, 0, 0, 0, 0, 0, 0
   li $a1, 9
   li $a2, 7
   li $a3, 0
+  li $s0, 1
   jal proc4
   
   move $a0, $v0
@@ -144,49 +144,33 @@ exit2:
   jr $ra
 
 proc3:
-  addi $sp, $sp, -16
+  addi $sp, $sp, -20
   sw $ra, 0($sp)
   sw $a0, 4($sp)
   sw $a1, 8($sp) 
   sw $a2, 12($sp)
+  sw $a3, 16($sp)
 
-  slt $t2, $t0, $a2
-  beq $t2, $zero, exit3
-
-  sll $t3, $t0, 2
-  add $t6, $a0, $t3
-
-  lw $t3, 0($t6)
-
-  beq $t3, $a1, rlevel
-
-  sll $t3, $t0, 1
-  addi $t4, $t3, 1 # left idx
-  addi $t5, $t3, 2 # right idx
-
-  addi $t1, $t1, 1
-  move $t0, $t4
-  
-  jal proc3
-
-  bgt $v0, $zero, exit3
-
-  move $t0, $t5
-  jal proc3
-
-  bgt $v0, $zero, exit3
-
-  li $v0, -1
-
-  j exit3
+	bge $a3, $a2, rn1
+	
+	sll $t0, $a3, 2
+	add $t1, $a0, $t0
+	
+	lw $t0, 0($t1)
+	
+	beq $t0, $a1, rlevel
+	
+	addi $a3, $a3, 1
+	jal proc3
 
 exit3:
-  lw $a2, 12($sp)
-  lw $a1, 8($sp)
-  lw $a0, 4($sp)
   lw $ra, 0($sp)
-
-  addi $sp, $sp, 16
+  lw $a0, 4($sp)
+  lw $a1, 8($sp) 
+  lw $a2, 12($sp)
+  lw $a3, 16($sp)
+  
+  addi $sp, $sp, 20
 
   jr $ra
 
@@ -199,21 +183,32 @@ r1:
   j exit3
 
 rlevel:
-  beqz $t0, r1
-
-  move $v0, $t1
+	li $v0, 1
+	li $t1, 1
+	addi $t0, $a3, 1
+	
+	ble $t0, $t1, exit3
+	
+	loop:
+		srl $t0, $t0, 1
+		addi $v0, $v0, 1
+		
+		ble $t0, $t1, exit3
+		j loop
+	
   j exit3
 
+
 proc4:
-  addi $sp, $sp, -20
+  addi $sp, $sp, -24
   sw $ra, 0($sp)
   sw $a0, 4($sp)
   sw $a1, 8($sp)
   sw $a2, 12($sp)
   sw $a3, 16($sp)
+  sw $s0, 20($sp)
   
-  slt $t1, $a2, $a3
-  bne $t1, $zero, rn12
+  bge $a3, $a2, rn12
   
   sll $t1, $a3, 2
   add $t0, $a0, $t1
@@ -227,6 +222,9 @@ proc4:
   addi $t2, $s1, 1
   move $a3, $t2 
   
+  lw $s0, 20($sp)
+  addi $s0, $s0, 1
+  
   jal proc4
   bne $v0, $s2, exit4
 
@@ -234,7 +232,10 @@ proc4:
   sll $s1, $a3, 1
   li $s2, -1
   addi $t2, $s1, 2
-  move $a3, $t2 
+  move $a3, $t2
+  
+  lw $s0, 20($sp)
+  addi $s0, $s0, 1
   
   jal proc4
 	
@@ -243,36 +244,25 @@ proc4:
   #li $v0, -1
   j exit4
 
+rn12:
+  li $v0, -1
+  j exit4
+  
+rnlevel4:
+	move $v0, $s0
+	j exit4
+
 exit4:
   lw $ra, 0($sp)
   lw $a0, 4($sp)
   lw $a1, 8($sp)
   lw $a2, 12($sp)
   lw $a3, 16($sp)
+  lw $s0, 20($sp)
   
-  addi $sp, $sp, 20
+  addi $sp, $sp, 24
   
   jr $ra
-
-loop:
-  srl $t1, $t1, 1
-  addi $v0, $v0, 1
-
-  ble $t1, $t0, exit4
-	j loop
-
-rnlevel4:
-  li $v0, 1
-  addi $t1, $a3, 1
-  li $t0, 1
-  
-  ble $t1, $t0, exit4
-	j loop
-
-rn12:
-  li $v0, -1
-  j exit4
-
 #a0 -> array address
 #a1 -> array size
 print_arr:

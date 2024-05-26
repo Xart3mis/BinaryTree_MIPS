@@ -30,14 +30,43 @@ pub fn proc_2(arr: &[i32], output: &'_ mut [i32], idx: usize, i: &mut usize) {
     proc_2(arr, output, right_idx, i);
 }
 
-fn proc_4_helper(tree: &[i32], target: i32, index: usize) -> i32 {
+fn proc_4_helper(tree: &[i32], target: i32, index: usize, level: i32) -> i32 {
     if index >= tree.len() {
         return -1;
     }
 
     if tree[index] == target {
+        return level;
+    }
+
+    let left_idx = 2 * index + 1;
+    let right_idx = 2 * index + 2;
+
+    let left_result = proc_4_helper(tree, target, left_idx, level + 1);
+    if left_result != -1 {
+        return left_result;
+    }
+
+    let right_result = proc_4_helper(tree, target, right_idx, level + 1);
+    if right_result != -1 {
+        return right_result;
+    }
+
+    -1
+}
+
+pub fn proc_4(tree: &[i32], target: i32) -> i32 {
+    proc_4_helper(tree, target, 0, 1)
+}
+
+pub fn proc_3(tree: &[i32], target: i32, idx: usize) -> i32 {
+    if idx >= tree.len() {
+        return -1;
+    }
+
+    if tree[idx] == target {
         let mut level = 1;
-        let mut current_index = index + 1; // Adjust for 0-based index
+        let mut current_index = idx + 1; // Adjust for 0-based index
 
         while current_index > 1 {
             current_index /= 2;
@@ -47,57 +76,7 @@ fn proc_4_helper(tree: &[i32], target: i32, index: usize) -> i32 {
         return level;
     }
 
-    let left_idx = 2 * index + 1;
-    let right_idx = 2 * index + 2;
-
-    let left_result = proc_4_helper(tree, target, left_idx);
-    if left_result != -1 {
-        return left_result;
-    }
-
-    let right_result = proc_4_helper(tree, target, right_idx);
-    if right_result != -1 {
-        return right_result;
-    }
-
-    -1
-}
-
-pub fn proc_4(tree: &[i32], target: i32) -> i32 {
-    proc_4_helper(tree, target, 0)
-}
-
-fn proc_3_helper(tree: &[i32], target: i32, idx: usize, level: i32) -> i32 {
-    if idx >= tree.len() {
-        return -1;
-    }
-
-    if tree[idx] == target {
-        if idx == 0 {
-            return 1;
-        }
-
-        return level;
-    }
-
-    let left_idx = 2 * idx + 1;
-    let right_idx = 2 * idx + 2;
-
-    let left_result = proc_3_helper(tree, target, left_idx, level + 1);
-    if left_result != -1 {
-        return left_result;
-    }
-
-    let right_result = proc_3_helper(tree, target, right_idx, level + 1);
-    if right_result != -1 {
-        return right_result;
-    }
-
-    -1
-}
-
-pub fn proc_3(tree: &[i32], target: i32) -> i32 {
-    proc_3_helper(tree, target, 0, 1)
+    proc_3(tree, target, idx + 1)
 }
 
 #[cfg(test)]
@@ -122,7 +101,7 @@ mod tests {
 
     #[test]
     fn test_proc_3() {
-        assert_eq!(proc_3(&[4, 9, 10, 10, 15, 2, 3], 10), 3);
+        assert_eq!(proc_3(&[4, 9, 10, 10, 15, 2, 3], 3, 0), 3);
     }
 
     #[test]
